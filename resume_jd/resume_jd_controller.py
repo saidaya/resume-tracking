@@ -5,7 +5,10 @@ from flask_cors import CORS, cross_origin
 
 # Import service and model
 from resume_jd.resume_jd_service import extract_skills_from_resume
-from resume_jd.resume_jd_service  import extract_skills_jd
+from resume_jd.resume_jd_service import extract_skills_from_resume_1
+from resume_jd.resume_jd_service  import extract_skills_jd_1
+from resume_jd.resume_jd_service import scorer
+from resume_jd.resume_jd_service import scorer_new
 from resume_jd.resume_jd_model import ResponseData
 
 #Importing Lib for JSON,DOCX,PDF
@@ -13,40 +16,94 @@ import json
 import PyPDF2
 from io import BytesIO
 import docx
+import os
 
 
 # PATH for API route and skills JSON
 resume_jd_route_path = 'resume_jd/v1'
 resume_jd_route = Blueprint(resume_jd_route_path, __name__)
-output_path = '/Users/saidayashankar/Desktop/DAEN690/code/resume-tracking/resume_jd/skills.json'
 
-# API TO GET JOB DESCRIPTION - POST
+
+
+#API to get the skills from JD - new
+@resume_jd_route.route("/jd_skills", methods=['POST'])
+def skills_jd():
+    data = request.get_json()
+    job_description = data.get('jd')
+    company_name = data.get('company_name')
+    skills = extract_skills_jd_1(job_description, company_name)
+    response_data = {
+        'company_name': company_name,
+        'job_description': job_description,
+        'skills': skills
+    }
+    return jsonify(response_data)
+
+#API to get the skills from Resume -new
+@resume_jd_route.route('/resume_skills', methods=['POST'])
+def skills_resume():
+    # Check if the file was uploaded
+    if 'file' not in request.files:
+        response_data = {
+            'message': 'No file part in the request'
+        }
+        return jsonify(response_data), 400
+
+    uploaded_file = request.files['file']
+    file_name = uploaded_file.filename
+
+    # Check if the filename is valid
+    if not file_name or '.' not in file_name or file_name.rsplit('.', 1)[1].lower() not in ['pdf', 'docx', 'txt']:
+        response_data = {
+            'message': 'Invalid file format'
+        }
+        return jsonify(response_data), 400
+
+    # Read the uploaded file based on its type
+    if file_name.endswith('.pdf'):
+        pdf_reader = PyPDF2.PdfReader(BytesIO(uploaded_file.read()))
+        resume_text = ''
+        for page in pdf_reader.pages:
+            resume_text += page.extract_text()
+    elif file_name.endswith('.docx'):
+        doc = docx.Document(BytesIO(uploaded_file.read()))
+        resume_text = ''
+        for paragraph in doc.paragraphs:
+            resume_text += paragraph.text
+    elif file_name.endswith('.txt'):
+        resume_text = uploaded_file.read().decode('utf-8')
+    else:
+        response_data = {
+            'message': 'Invalid file format'
+        }
+        return jsonify(response_data), 400
+
+    # Extract skills from the resume text
+    skills = extract_skills_from_resume_1(resume_text)
+
+    # Prepare the response
+    response_data = {
+        'message': f'{file_name} is uploaded successfully',
+        'resume_text': resume_text,
+        'skills': skills
+    }
+    return jsonify(response_data), 200
+
+
+
+
+#API to get JD- -old
 @resume_jd_route.route("/jd", methods=['POST'])
 # @cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
 def extract_jd():
     data = request.get_json()
     job_description = data.get('jd')
     company_name = data.get('company_name')
-    extract_skills_jd(job_description,company_name,output_path)
+    #extract_skills_jd(job_description,company_name)
     response_data = ResponseData('Data received', job_description=job_description, company_name=company_name)
     return jsonify(response_data.to_dict())
 
-# API TO EXTRACT SKILLS  - GET
-@resume_jd_route.route('/skills', methods=['GET'])
-def get_skills():
-    try:
-        with open(output_path, 'r') as f:
-            skills = json.load(f)
-            if skills:
-                return jsonify(skills)
-            else:
-                return jsonify({'message': 'No skills found'})
-    except FileNotFoundError:
-        return jsonify({'error': 'Skills file not found'})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# API TO GET RESUME - POST
+#API to get resume - -old
 @resume_jd_route.route("/resume", methods=['POST'])
 def extract_resume():
     file = request.files['file']
@@ -58,7 +115,7 @@ def extract_resume():
         text = ''
         for page in pdf_reader.pages:
             text += page.extract_text()
-        extract_skills_from_resume(text,output_path)
+        extract_skills_from_resume(text)
         response_data = {
             'message': 'PDF is uploaded successfully',
             'text': text
@@ -70,7 +127,7 @@ def extract_resume():
         for paragraph in doc.paragraphs:
             text += paragraph.text
         print("TEXT : ",text)
-        extract_skills_from_resume(text, output_path)
+        extract_skills_from_resume(text)
         response_data = {
             'message': 'DOCX is uploaded successfully',
             'text': text
@@ -78,7 +135,7 @@ def extract_resume():
         return jsonify(response_data), 200
     elif fileName.endswith('.txt'):
         text = file.read().decode('utf-8')
-        extract_skills_from_resume(text, output_path)
+        extract_skills_from_resume(text)
         response_data = {
             'message': 'Text is uploaded successfully',
             'text': text
@@ -90,94 +147,87 @@ def extract_resume():
         }
         return jsonify(response_data), 400
 
+#API to show the extracted skills JD -old
+@resume_jd_route.route('/skills/jd', methods=['GET'])
+def get_skills_jd():
+    jd_filename = os.path.join(os.getcwd(), 'jd_data.json')
 
-def allowed_file(filename):
-    ALLOWED_EXTENSIONS = {'txt', 'pdf','docx'}
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    # check if files exist
+    if not os.path.exists(jd_filename):
+        return jsonify({'error': 'Skills file not found'})
 
-# Should delete later
-# file = request.files['file']
-    # print("FILE>",file)
-    # file_contents = file.read()
-    # # file_type = request.file.get('file_type')
-    # # file_content = request.files.get('file')
-    # # if file_type == 'pdf':
-    # pdf_file = file_contents
-    # print("pdf_file:",pdf_file)
-    # # Create a SimplePDFViewer object and bind it to the PDF file
-    # viewer = SimplePDFViewer(pdf_file)
-    # # Process each page in the PDF file and extract its text
-    # text = ''
-    # while True:
-    #     try:
-    #         viewer.render()
-    #     except StopIteration:
-    #         break
-    #     else:
-    #         text += viewer.canvas.text_content
-    #
-    # print(text)
-    # # extract_skills_from_resume(file_content,output_path)
-    # response_data = {
-    #     'message':'Sucess'
-    # }
-    # return  response_data, 200
 
-    # try:
-    #     response = request.headers
-    #     file = request.files['file']
-    #     file_contents = file.read()
-    #     content_type = response.get('content-type')
-    #     print("CONTENT:",content_type)
-    #     # If the content type is docx
-    #     if 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' in content_type:
-    #
-    #         # Get the text content from the docx file
-    #         text = docx2txt.process(response.content)
-    #         print("TEXTTTTT:",text)
-    #     # If the content type is pdf
-    #     elif 'application/pdf' in content_type:
-    #
-    #         # Read the PDF file
-    #         pdf_file = PyPDF2.PdfFileReader(response.content)
-    #
-    #         # Get the text content from each page of the PDF file
-    #         text = ''
-    #         for i in range(pdf_file.getNumPages()):
-    #             page = pdf_file.getPage(i)
-    #             text += page.extractText()
-    #
-    #     # If the content type is not supported
-    #     else:
-    #         print('Unsupported content type:', content_type)
-    #         text = None
-    #
-    #     # Print the text content in human-readable format
-    #     if text is not None:
-    #         print(text)
-    #     file = request.files['file']
-    #     file_contents = file.read()
-    #
-    #     # print(file_contents)
-    #     # response = extract_skills_from_resume(file_contents,output_path)
-    # except KeyError:
-    #     return jsonify({'error': 'No file was provided'}), 400
-    #
-    # if file.filename == '':
-    #     return jsonify({'error': 'No file was selected'}), 400
-    #
-    # if not allowed_file(file.filename):
-    #     return jsonify({'error': 'Unsupported file format'}), 400
-    #
-    # try:
-    #     file_contents = file.read()
-    #     response_data = {
-    #         'message': 'File has been successfully Uploaded'
-    #     }
-    #     print(response_data)
-    # except Exception:
-    #     return jsonify({'error': 'Error reading file'}), 500
-    #
-    # return response_data, 200
+    # check filename and load JSON data from file
+    if 'jd_data' in jd_filename:
+        message = 'JD SKills'
+        with open(jd_filename, 'r') as f:
+            data = json.load(f)
+    else:
+        return jsonify({'error': 'SKills not available'})
+    # return JSON data and message
+    return jsonify({'message': message, 'data': data})
+
+    #     with open(output_path, 'r') as f:
+    #         skills = json.load(f)
+    #         if skills:
+    #             return jsonify(skills)
+    #         else:
+    #             return jsonify({'message': 'No skills found'})
+    # except FileNotFoundError:
+    #     return jsonify({'error': 'Skills file not found'})
+    # except Exception as e:
+    #     return jsonify({'error': str(e)}), 500
+
+#API to show the extracted skills resume -old
+@resume_jd_route.route('/skills/resume', methods=['GET'])
+def get_skills_resume():
+    resume_filename = os.path.join(os.getcwd(), 'resume_data.json')
+    # check if files exist
+    if not os.path.exists(resume_filename):
+        return jsonify({'error': 'Resume Skills not found'})
+    # check filename and load JSON data from file
+
+    if 'resume_data' in resume_filename:
+        message = 'Resume data loaded'
+        with open(resume_filename, 'r') as f:
+            data = json.load(f)
+    else:
+        return jsonify({'error': 'No Skills to be displayed'})
+    # return JSON data and message
+    return jsonify({'message': message, 'data': data})
+
+    #     with open(output_path, 'r') as f:
+    #         skills = json.load(f)
+    #         if skills:
+    #             return jsonify(skills)
+    #         else:
+    #             return jsonify({'message': 'No skills found'})
+    # except FileNotFoundError:
+    #     return jsonify({'error': 'Skills file not found'})
+    # except Exception as e:
+    #     return jsonify({'error': str(e)}), 500
+
+#API to get cosine Simmilarity: - old
+@resume_jd_route.route('/skills/score', methods=['GET'])
+def get_score():
+    try:
+        cosine_score = scorer()
+        return jsonify({
+            'message':'Success',
+            'score':cosine_score,
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+#API to get cosine Simmilarity: - new
+@resume_jd_route.route('/skills/score_new', methods=['GET'])
+def get_score_new():
+    try:
+        cosine_score = scorer_new()['cosine_similarity']
+        return jsonify({
+            'message': 'Success',
+            'score': cosine_score,
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
