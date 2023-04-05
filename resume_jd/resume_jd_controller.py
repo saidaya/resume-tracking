@@ -32,11 +32,24 @@ def skills_jd():
     job_description = data.get('jd')
     company_name = data.get('company_name')
     skills = extract_skills_jd_1(job_description, company_name)
+    print(skills['skills'])
+    if "status" in skills:
+        # If extract_skills_jd_1 function returns an error
+        response_data = {
+            'company_name': company_name,
+            'job_description': job_description,
+            'message': skills["message"]
+        }
+        print(response_data)
+        return jsonify(response_data), 500  # Internal Server Error status code
+
+    # If extract_skills_jd_1 function returns skills data
     response_data = {
         'company_name': company_name,
         'job_description': job_description,
-        'skills': skills
+        'skills': skills['skills']
     }
+    print(response_data)
     return jsonify(response_data)
 
 #API to get the skills from Resume -new
@@ -79,13 +92,17 @@ def skills_resume():
         return jsonify(response_data), 400
 
     # Extract skills from the resume text
-    skills = extract_skills_from_resume_1(resume_text)
+    skills_response = extract_skills_from_resume_1(resume_text)
+
+    # Check if there was an error extracting skills
+    if "status" in skills_response and skills_response["status"] != 200:
+        return jsonify(skills_response), skills_response["status"]
 
     # Prepare the response
     response_data = {
         'message': f'{file_name} is uploaded successfully',
         'resume_text': resume_text,
-        'skills': skills
+        'skills': skills_response["skills"]
     }
     return jsonify(response_data), 200
 

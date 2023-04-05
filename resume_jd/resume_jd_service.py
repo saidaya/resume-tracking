@@ -23,6 +23,9 @@ skill_extractor = SkillExtractor(nlp, SKILL_DB, PhraseMatcher)
 from resume_jd.resume_jd_model import ResponseData
 import pandas as pd
 
+current_dir = os.getcwd()
+skills_filter_file = os.path.join(current_dir,'resume_jd', 'skills_filter.csv')
+
 
 # Method to extract skills from JD - old
 def extract_skills_jd(job_description,company_name)-> dict:
@@ -39,7 +42,7 @@ def extract_skills_jd(job_description,company_name)-> dict:
     sorted_skills = sorted(count_dict.items(), key=lambda x: x[1], reverse=True)
     key_skills = [x[0] for x in sorted_skills if x[1] > 1]
     skills_filter = [x[0] for x in sorted_skills if x[1] == 1]
-    skills_data = pd.read_csv("/Users/saidayashankar/Desktop/resume_jd_parse/resume_jd/skills_filter.csv")
+    skills_data = pd.read_csv(skills_filter_file)
     df = skills_data.replace(r'\n', '', regex=True)
     df = df.apply(lambda x: x.str.lower())
     skill_list = df["Skill"].values.tolist()
@@ -96,7 +99,7 @@ def extract_skills_from_resume(filepath):
     sorted_skills = sorted(count_dict.items(), key=lambda x: x[1], reverse=True)
     key_skills = [x[0] for x in sorted_skills if x[1] > 1]
     skills_filter = [x[0] for x in sorted_skills if x[1] == 1]
-    skills_data = pd.read_csv("/Users/saidayashankar/Desktop/resume_jd_parse/resume_jd/skills_filter.csv")
+    skills_data = pd.read_csv(skills_filter_file)
     df = skills_data.replace(r'\n', '', regex=True)
     df = df.apply(lambda x: x.str.lower())
     skill_list = df["Skill"].values.tolist()
@@ -181,7 +184,7 @@ def extract_skills_jd_1(job_description, company_name):
 
     try:
         # Load skills data
-        skills_data = pd.read_csv("/Users/saidayashankar/Desktop/resume_jd_parse/resume_jd/skills_filter.csv")
+        skills_data = pd.read_csv(skills_filter_file)
         skills_data["Skill"] = skills_data["Skill"].str.lower()
         skill_set = set(skills_data["Skill"].tolist())
 
@@ -252,7 +255,7 @@ def extract_skills_from_resume_1(resume_text):
 
     try:
         # Load skills data
-        skills_data = pd.read_csv("/Users/saidayashankar/Desktop/resume_jd_parse/resume_jd/skills_filter.csv")
+        skills_data = pd.read_csv(skills_filter_file)
         skills_data["Skill"] = skills_data["Skill"].str.lower()
         skill_set = set(skills_data["Skill"].tolist())
 
