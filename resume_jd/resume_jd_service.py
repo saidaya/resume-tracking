@@ -208,7 +208,7 @@ def scorer():
 
 
 
-# Methods to extract SKILLS from JD and RESUME - old
+# Methods to extract SKILLS from JD and RESUME - old ( Should be deleted later)
 # Method to extract skills from JD - old
 def extract_skills_jd_old(job_description,company_name)-> dict:
     annotations = skill_extractor.annotate(job_description)
