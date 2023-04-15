@@ -4,11 +4,12 @@ from flask import Flask, request, send_file
 from flask_cors import CORS, cross_origin
 
 # Import service and model
+from resume_jd.resume_jd_service import extract_skills_from_resume_old
 from resume_jd.resume_jd_service import extract_skills_from_resume
-from resume_jd.resume_jd_service import extract_skills_from_resume_1
-from resume_jd.resume_jd_service  import extract_skills_jd_1
+from resume_jd.resume_jd_service  import extract_skills_jd
+from resume_jd.resume_jd_service  import extract_skills_jd_old
 from resume_jd.resume_jd_service import scorer
-from resume_jd.resume_jd_service import scorer_new
+from resume_jd.resume_jd_service import scorer_old
 from resume_jd.resume_jd_model import ResponseData
 
 #Importing Lib for JSON,DOCX,PDF
@@ -31,8 +32,7 @@ def skills_jd():
     data = request.get_json()
     job_description = data.get('jd')
     company_name = data.get('company_name')
-    skills = extract_skills_jd_1(job_description, company_name)
-    print(skills['skills'])
+    skills = extract_skills_jd(job_description, company_name)
     if "status" in skills:
         # If extract_skills_jd_1 function returns an error
         response_data = {
@@ -40,7 +40,6 @@ def skills_jd():
             'job_description': job_description,
             'message': skills["message"]
         }
-        print(response_data)
         return jsonify(response_data), 500  # Internal Server Error status code
 
     # If extract_skills_jd_1 function returns skills data
@@ -92,7 +91,7 @@ def skills_resume():
         return jsonify(response_data), 400
 
     # Extract skills from the resume text
-    skills_response = extract_skills_from_resume_1(resume_text)
+    skills_response = extract_skills_from_resume(resume_text)
 
     # Check if there was an error extracting skills
     if "status" in skills_response and skills_response["status"] != 200:
@@ -106,7 +105,17 @@ def skills_resume():
     }
     return jsonify(response_data), 200
 
-
+#API to get cosine Simmilarity: - new
+@resume_jd_route.route('/skills/score', methods=['GET'])
+def get_score_new():
+    try:
+        cosine_score = scorer()['cosine_similarity']
+        return jsonify({
+            'message': 'Success',
+            'score': cosine_score,
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 #API to get JD- -old
@@ -116,7 +125,7 @@ def extract_jd():
     data = request.get_json()
     job_description = data.get('jd')
     company_name = data.get('company_name')
-    #extract_skills_jd(job_description,company_name)
+    extract_skills_jd_old(job_description,company_name)
     response_data = ResponseData('Data received', job_description=job_description, company_name=company_name)
     return jsonify(response_data.to_dict())
 
@@ -132,7 +141,7 @@ def extract_resume():
         text = ''
         for page in pdf_reader.pages:
             text += page.extract_text()
-        extract_skills_from_resume(text)
+        extract_skills_from_resume_old(text)
         response_data = {
             'message': 'PDF is uploaded successfully',
             'text': text
@@ -144,7 +153,7 @@ def extract_resume():
         for paragraph in doc.paragraphs:
             text += paragraph.text
         print("TEXT : ",text)
-        extract_skills_from_resume(text)
+        extract_skills_from_resume_old(text)
         response_data = {
             'message': 'DOCX is uploaded successfully',
             'text': text
@@ -152,7 +161,7 @@ def extract_resume():
         return jsonify(response_data), 200
     elif fileName.endswith('.txt'):
         text = file.read().decode('utf-8')
-        extract_skills_from_resume(text)
+        extract_skills_from_resume_old(text)
         response_data = {
             'message': 'Text is uploaded successfully',
             'text': text
@@ -225,10 +234,10 @@ def get_skills_resume():
     #     return jsonify({'error': str(e)}), 500
 
 #API to get cosine Simmilarity: - old
-@resume_jd_route.route('/skills/score', methods=['GET'])
-def get_score():
+@resume_jd_route.route('/skills/score_old', methods=['GET'])
+def get_score_old():
     try:
-        cosine_score = scorer()
+        cosine_score = scorer_old()
         return jsonify({
             'message':'Success',
             'score':cosine_score,
@@ -236,15 +245,4 @@ def get_score():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-#API to get cosine Simmilarity: - new
-@resume_jd_route.route('/skills/score_new', methods=['GET'])
-def get_score_new():
-    try:
-        cosine_score = scorer_new()['cosine_similarity']
-        return jsonify({
-            'message': 'Success',
-            'score': cosine_score,
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
