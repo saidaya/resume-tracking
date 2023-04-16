@@ -11,9 +11,9 @@ Create an API that takes as input a job description (text), candidate resume (Wo
 ## Contributers
 
 - Shikhar Jain       - Product Owner
-* Shagun Sood         - Scrum Master 
+* Shagun Sood        - Scrum Master 
 + Sai Daya Shankar   - Github Manager
-- Tharun Somannagari - Developer
+- Tharun Somannagari - AWS Manager/Developer
 + Priyank Gandhi     - Developer
 * Avnit Singh Banga  - Developer
 
