@@ -7,21 +7,19 @@ from pdfminer.high_level import extract_text
 import io
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-
-
-# SKILLNER
+from resume_jd.resume_jd_model import ResponseData
+import pandas as pd
+import sys
 import spacy
 from spacy.matcher import PhraseMatcher
+# import skill extractor code
+from src.skill_extractor_class import SkillExtractor
 # load default skills data base
-from skillNer.general_params import SKILL_DB
-# import skill extractor
-from skillNer.skill_extractor_class import SkillExtractor
-
+from src.general_params import SKILL_DB
 # init params of skill extractor
 nlp = spacy.load("en_core_web_lg")
 skill_extractor = SkillExtractor(nlp, SKILL_DB, PhraseMatcher)
-from resume_jd.resume_jd_model import ResponseData
-import pandas as pd
+
 
 current_dir = os.getcwd()
 skills_filter_file = os.path.join(current_dir,'resume_jd', 'skills_filter.csv')
