@@ -34,32 +34,81 @@ def extract_skills_jd(job_description, company_name):
         }
 
     try:
-        # Load skills data
-        skills_data = pd.read_csv(skills_filter_file)
-        skills_data["Skill"] = skills_data["Skill"].str.lower()
-        skill_set = set(skills_data["Skill"].tolist())
+        skill_data = pd.read_csv(skills_filter_file)
+        skill_data["Skill"] = skill_data["Skill"].str.lower()
+        skill_set = set(skill_data["Skill"].tolist())
 
-        # Extract skills from job description
-        annotations = skill_extractor.annotate(job_description)
-        doc_node_values = [item["doc_node_value"] for key, value in annotations["results"].items() for item in value if
-                           item["score"] >= 1]
-        count_dict = {}
-        for element in doc_node_values:
-            count_dict[element] = count_dict.get(element, 0) + 1
-        sorted_skills = sorted(count_dict.items(), key=lambda x: x[1], reverse=True)
-        key_skills = [x[0] for x in sorted_skills if x[1] > 1]
-        skills_filter = [x[0] for x in sorted_skills if x[1] == 1]
-        filter_set = set(map(str.lower, skills_filter))
-
-        # Find matching skills
-        matching_skills = list(skill_set.intersection(filter_set))
-        key_skills.extend(matching_skills)
-
+        # # Extract skills from resume
+        # annotations = skill_extractor.annotate(job_description)
+        # doc_node_values = [item['doc_node_value'] for item in annotations['results']['ngram_scored'] if
+        #                    item['score'] >= 1]
+        # full_match = [item['doc_node_value'] for item in annotations['results']['full_matches']]
+        #
+        # # Add full matches to the key skills list
+        # # key_skills = list(set(doc_node_values + full_match))
+        # for i in full_match:
+        #     doc_node_values.append(i)
+        # count_dict = {}
+        # for element in doc_node_values:
+        #     if element in count_dict:
+        #         count_dict[element] += 1
+        #     else:
+        #         count_dict[element] = 1
+        # sorted_skills = sorted(count_dict.items(), key=lambda x: x[1], reverse=True)
+        # print("Sorted Skills:", sorted_skills)
+        # key_skills = [x[0] for x in sorted_skills if x[1] > 1]
+        # for i in full_match:
+        #     key_skills.append(i)
+        # print("Key skills:", key_skills)
+        # skills_filter = [x[0] for x in sorted_skills if x[1] == 1]
+        # filter_set = set(map(str.lower, skills_filter))
+        #
+        # # Find matching skills
+        # matching_skills = list(skill_set.intersection(filter_set))
+        # print("Matching SKills:", matching_skills)
+        # key_skills.extend(matching_skills)
+        # print("Key SKills Final :", key_skills)
+        #
         # Save skills data as JSON
+
+        #### Testing ....
+
+
+        # Extract skills from resume
+        annotations = skill_extractor.annotate(job_description)
+        matched_phrases = [item['doc_node_value'] for item in annotations['results']['ngram_scored'] if
+                           item['score'] >= 1]
+        full_matches = [item['doc_node_value'] for item in annotations['results']['full_matches']]
+        matched_phrases += full_matches
+
+        # Count the occurrences of each matched phrase
+        phrase_counts = {}
+        for phrase in matched_phrases:
+            # Use default dict to simplify the counting process
+            phrase_counts[phrase] = phrase_counts.get(phrase, 0) + 1
+
+        # Sort the phrases by frequency and extract the most frequent ones as key phrases
+        sorted_phrases = sorted(phrase_counts.items(), key=lambda x: x[1], reverse=True)
+        key_phrases = [x[0] for x in sorted_phrases if x[1] > 1]
+        key_phrases += full_matches
+        key_phrases = list(set(key_phrases))
+
+        # Find all unmatched phrases and filter them against a list of known skills
+        unmatched_phrases = [x[0] for x in sorted_phrases if x[1] == 1]
+        # Convert all skills to lowercase for case-insensitive matching
+        skill_data = skill_data.apply(lambda x: x.str.lower())
+        skill_set = set(skill_data["Skill"].tolist())
+        unmatched_set = set(unmatched_phrases)
+        # Find the intersection of the unmatched phrases and known skills to identify key skills
+        key_phrases += list(skill_set.intersection(unmatched_set))
+        key_phrases = list(set(key_phrases))
+
         data = {
-            "skills": key_skills,
+            "skills": key_phrases,
             "format": "JD"
         }
+
+
         cwd = os.getcwd()
         file_path = os.path.join(cwd, "jd_data.json")
         with open(file_path, "w") as f:
@@ -70,7 +119,7 @@ def extract_skills_jd(job_description, company_name):
             "message": "Data received",
             "job_description": job_description,
             "company_name": company_name,
-            "skills": key_skills
+            "skills": key_phrases
         }
 
         return response_data
@@ -106,30 +155,85 @@ def extract_skills_from_resume(resume_text):
         return error_data
 
     try:
+        # # Load skills data
+        # skills_data = pd.read_csv(skills_filter_file)
+        # skills_data["Skill"] = skills_data["Skill"].str.lower()
+        # skill_set = set(skills_data["Skill"].tolist())
+        #
+        # # Extract skills from resume
+        # annotations = skill_extractor.annotate(resume_text)
+        # doc_node_values = [item['doc_node_value'] for item in annotations['results']['ngram_scored'] if
+        #                           item['score'] >= 1]
+        # full_match = [item['doc_node_value'] for item in annotations['results']['full_matches']]
+        #
+        # # Add full matches to the key skills list
+        # # key_skills = list(set(doc_node_values + full_match))
+        # for i in full_match:
+        #     doc_node_values.append(i)
+        # count_dict = {}
+        # for element in doc_node_values:
+        #     if element in count_dict:
+        #         count_dict[element] += 1
+        #     else:
+        #         count_dict[element] = 1
+        # sorted_skills = sorted(count_dict.items(), key=lambda x: x[1], reverse=True)
+        # print("Sorted Skills:",sorted_skills)
+        # key_skills = [x[0] for x in sorted_skills if x[1] > 1]
+        # for i in full_match:
+        #     key_skills.append(i)
+        # print("Key skills:",key_skills)
+        # skills_filter = [x[0] for x in sorted_skills if x[1] == 1]
+        # filter_set = set(map(str.lower, skills_filter))
+        #
+        # # Find matching skills
+        # matching_skills = list(skill_set.intersection(filter_set))
+        # print("Matching SKills:",matching_skills)
+        # key_skills.extend(matching_skills)
+        # print("Key SKills Final :",key_skills)
+
+        # Testing ......
         # Load skills data
-        skills_data = pd.read_csv(skills_filter_file)
-        skills_data["Skill"] = skills_data["Skill"].str.lower()
-        skill_set = set(skills_data["Skill"].tolist())
+        skill_data = pd.read_csv(skills_filter_file)
+        skill_data["Skill"] = skill_data["Skill"].str.lower()
+        skill_set = set(skill_data["Skill"].tolist())
 
         # Extract skills from resume
         annotations = skill_extractor.annotate(resume_text)
-        doc_node_values = [item["doc_node_value"] for key, value in annotations["results"].items() for item in value
-                           if item["score"] >= 1]
-        count_dict = {}
-        for element in doc_node_values:
-            count_dict[element] = count_dict.get(element, 0) + 1
-        sorted_skills = sorted(count_dict.items(), key=lambda x: x[1], reverse=True)
-        key_skills = [x[0] for x in sorted_skills if x[1] > 1]
-        skills_filter = [x[0] for x in sorted_skills if x[1] == 1]
-        filter_set = set(map(str.lower, skills_filter))
+        print("Annotations",annotations)
+        matched_phrases = [item['doc_node_value'] for item in annotations['results']['ngram_scored'] if
+                           item['score'] >= 1]
+        print("matched_phrases:", matched_phrases)
+        full_matches = [item['doc_node_value'] for item in annotations['results']['full_matches']]
+        print("full_matches:", full_matches)
+        matched_phrases += full_matches
+        print("matched_phrases:", matched_phrases)
 
-        # Find matching skills
-        matching_skills = list(skill_set.intersection(filter_set))
-        key_skills.extend(matching_skills)
+        # Count the occurrences of each matched phrase
+        phrase_counts = {}
+        for phrase in matched_phrases:
+            # Use defaultdict to simplify the counting process
+            phrase_counts[phrase] = phrase_counts.get(phrase, 0) + 1
 
+        # Sort the phrases by frequency and extract the most frequent ones as key phrases
+        sorted_phrases = sorted(phrase_counts.items(), key=lambda x: x[1], reverse=True)
+        print("sorted_phrases:", sorted_phrases)
+        key_phrases = [x[0] for x in sorted_phrases if x[1] > 1]
+        key_phrases += full_matches
+        key_phrases = list(set(key_phrases))
+        print("key_phrases:", key_phrases)
+
+        # Find all unmatched phrases and filter them against a list of known skills
+        unmatched_phrases = [x[0] for x in sorted_phrases if x[1] == 1]
+        # Convert all skills to lowercase for case-insensitive matching
+        skill_data = skill_data.apply(lambda x: x.str.lower())
+        skill_set = set(skill_data["Skill"].tolist())
+        unmatched_set = set(unmatched_phrases)
+        # Find the intersection of the unmatched phrases and known skills to identify key skills
+        key_phrases += list(skill_set.intersection(unmatched_set))
+        key_phrases = list(set(key_phrases))
         # Save skills data as JSON
         data = {
-            "skills": key_skills,
+            "skills": key_phrases,
             "format": "Resume"
         }
         cwd = os.getcwd()
@@ -142,7 +246,7 @@ def extract_skills_from_resume(resume_text):
             "status": 200,
             "message": "Data received",
             "resume_text": resume_text,
-            "skills": key_skills
+            "skills": key_phrases
         }
 
         return response_data
@@ -202,178 +306,3 @@ def scorer():
         response = {'error': str(e)}
 
     return response
-
-
-
-
-# Methods to extract SKILLS from JD and RESUME - old ( Should be deleted later)
-# Method to extract skills from JD - old
-def extract_skills_jd_old(job_description,company_name)-> dict:
-    annotations = skill_extractor.annotate(job_description)
-    #doc_node_values = [item['doc_node_value'] for item in annotations['results']['ngram_scored'] if item['score'] >= 1]
-    doc_node_values = [item['doc_node_value'] for key, value in annotations['results'].items() for item in value if
-                        item['score'] >= 1]
-    count_dict = {}
-    for element in doc_node_values:
-        if element in count_dict:
-            count_dict[element] += 1
-        else:
-            count_dict[element] = 1
-    sorted_skills = sorted(count_dict.items(), key=lambda x: x[1], reverse=True)
-    key_skills = [x[0] for x in sorted_skills if x[1] > 1]
-    skills_filter = [x[0] for x in sorted_skills if x[1] == 1]
-    skills_data = pd.read_csv(skills_filter_file)
-    df = skills_data.replace(r'\n', '', regex=True)
-    df = df.apply(lambda x: x.str.lower())
-    skill_list = df["Skill"].values.tolist()
-    skill_set = set(skill_list)
-    filter_set = set(skills_filter)
-    b = list(skill_set.intersection(filter_set))
-    for i in b:
-        key_skills.append(i)
-    data = {
-                "skills": key_skills ,
-                "format":"JD"
-            }
-    cwd = os.getcwd()
-    file_path = os.path.join(cwd, 'jd_data.json')
-    if os.path.isfile(file_path):
-        with open(file_path, 'w') as f:
-            json.dump(data, f)
-    else:
-        with open(file_path, 'w') as f:
-            json.dump(data, f)
-
-    # if os.path.exists(output_file_path):
-    #     with open(output_file_path, "r+") as f:
-    #                 json_data = json.load(f)
-    #                 if json_data:
-    #                     f.seek(0)
-    #                     f.truncate()
-    #                     json.dump(data, f)
-    # else:
-    #     with open(output_file_path, "w") as f:
-    #         json.dump(data, f)
-
-    responseData =  ResponseData(
-        'Data received',
-        job_description=job_description,
-        company_name=company_name
-    )
-    return responseData
-
-#Method to extract skills from resume - old
-def extract_skills_from_resume_old(filepath):
-    # text = extract_text(filepath)
-    # print(text)
-    annotations = skill_extractor.annotate(filepath)
-    doc_node_values = [item['doc_node_value'] for item in annotations['results']['ngram_scored'] if item['score'] >= 1]
-    # doc_node_values = [item['doc_node_value'] for key, value in annotations['results'].items() for item in value if
-    #                    item['score'] >= 1]
-    count_dict = {}
-    for element in doc_node_values:
-        if element in count_dict:
-            count_dict[element] += 1
-        else:
-            count_dict[element] = 1
-    sorted_skills = sorted(count_dict.items(), key=lambda x: x[1], reverse=True)
-    key_skills = [x[0] for x in sorted_skills if x[1] > 1]
-    skills_filter = [x[0] for x in sorted_skills if x[1] == 1]
-    skills_data = pd.read_csv(skills_filter_file)
-    df = skills_data.replace(r'\n', '', regex=True)
-    df = df.apply(lambda x: x.str.lower())
-    skill_list = df["Skill"].values.tolist()
-    skill_set = set(skill_list)
-    filter_set = set(skills_filter)
-    b = list(skill_set.intersection(filter_set))
-    for i in b:
-        key_skills.append(i)
-    data = {
-        "skills": key_skills,
-        "format": "RESUME"
-    }
-
-    cwd = os.getcwd()
-    file_path = os.path.join(cwd, 'resume_data.json')
-    if os.path.isfile(file_path):
-        with open(file_path, 'w') as f:
-            json.dump(data, f)
-    else:
-        with open(file_path, 'w') as f:
-            json.dump(data, f)
-
-    # if os.path.exists(output_file_path):
-    #     with open(output_file_path, "r+") as f:
-    #         json_data = json.load(f)
-    #         if json_data:
-    #             f.seek(0)
-    #             f.truncate()
-    #             json.dump(data, f)
-    # else:
-    #     with open(output_file_path, "w") as f:
-    #         json.dump(data, f)
-
-    # print("Annotations",annotations)
-    # keywords = []
-    # for key, value in annotations['results'].items():
-    #     for item in value:
-    #         if (int(item['score']) >= 0):
-    #             keywords.append(item['doc_node_value'])
-    #
-    # # Format annotations as a dictionary
-    # print("Keywords",type(keywords))
-    # if isinstance(keywords, list):
-    #     data = {
-    #         "skills": keywords ,
-    #         "format":"JD"
-    #     }
-    #     print(data)
-    #     if os.path.exists(output_file_path):
-    #         with open(output_file_path, "r+") as f:
-    #             json_data = json.load(f)
-    #             if json_data:
-    #                 f.seek(0)
-    #                 f.truncate()
-    #                 json.dump(data, f)
-    #     else:
-    #         with open(output_file_path, "w") as f:
-    #             json.dump(data, f)
-    # else:
-    #     print("ERROR ")
-
-    # Dump dictionary to JSON file
-
-    #
-    # responseData = ResponseData('Data received', job_description=job_description, company_name=company_name)
-    # return responseData
-    responseData = {
-        'message' : 'Skills has been successfully Extracted',
-        'skills': data,
-        'format':'resume'
-    }
-    return responseData
-
-#Method to find the score (JD,RESUME) - old
-def scorer_old():
-    # pip install -U scikit-learn scipy matplotlib
-    with open('jd_data.json') as f1:
-        data1 = json.load(f1)
-        skills1 = data1['skills']
-
-    with open('resume_data.json') as f2:
-        data2 = json.load(f2)
-        skills2 = data2['skills']
-
-    # create a list of all skills
-    all_skills = list(set(skills1 + skills2))
-
-    # create vectors for each file
-    vector1 = np.array([1 if skill in skills1 else 0 for skill in all_skills])
-    vector2 = np.array([1 if skill in skills2 else 0 for skill in all_skills])
-
-    # calculate the cosine similarity
-    cosine_sim = cosine_similarity(vector1.reshape(1, -1), vector2.reshape(1, -1))[0][0]
-    cosine = cosine_sim*100
-    print(f"The cosine similarity between the two skill sets is {cosine}")
-    return cosine
-
