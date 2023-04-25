@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Large Text Area Form</title>
+
+	<!-- Add Bootstrap CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="homePage.css">
+    <script src="homePage.js"></script>
+</head>
+<body>
+	<div class="container">
+		<div class="row">
+			<div class=" col card mt-5 mx-3">
+				<h2>Job Description</h2>
+				<form id = "myForm" action="" method="post" onsubmit="submitForm(event)">
+					<div class="form-group">
+						<label for="company_name">Company</label><br>
+						<input class="form-control" id="company_name" name="input-text">
+
+						<label for="job_description">Enter Job description:</label><br>
+						<textarea class="form-control" id="job_description" name="input-text" rows="5" cols="15"></textarea>
+					</div>
+					<button type="submit" class=" mb-2 btn btn-primary">Submit</button>
+				</form>
+			</div>
+			<div class="col card mt-5 mx-3">
+				<h2>Resume</h2>
+				<div class="mb-3">
+					<div>
+						<label class="mt-3 mb-3">Upload Resume</label>
+
+					</div>
+					<input type="file" class="form-control btn "  id="fileInputt">
+					<button id="submit-btn" class="mt-3 btn btn-primary" onclick="uploadFile()">upload</button>
+					<p id="message"></p>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="container mt-5 ">
+		<div class="row ">
+			<div class="col  mx-3 card">
+					<h2>Job Description Skills</h2>
+					<button id="clear1" class="mt-3 btn btn-primary" onclick="clearSkills2()">clear</button>
+					<div id="data"></div>
+	<!--						<div>-->
+	<!--							<button id="my-button" type="submit" class="mb-2 btn btn-primary" onclick="getResponse()">-->
+	<!--								Show JD-->
+	<!--							</button>-->
+	<!--						</div>-->
+			</div>
+			<div class="col  mx-3 card">
+				<h2>Resume Skills</h2>
+				<button id="clear" class="mt-3 btn btn-primary" onclick="clearSkills()">clear</button>
+
+				<div id="data1"></div>
+			</div>
+	<!--						<div>-->
+	<!--							<button id="my-button" type="submit" class="mb-2 btn btn-primary" onclick="getResponse()">-->
+	<!--								Show JD-->
+	<!--							</button>-->
+	<!--						</div>-->
+
+		</div>
+		<div class="container d-flex justify-content-center my-5">
+		  <div class="mx-3 card">
+			<h2 class="text-center">Score</h2>
+			  <button class="btn btn-primary mt-3" onclick="showScore()">Get Score</button>
+			<h1 id="score" class="mt-3 text-center"></h1>
+		  </div>
+		</div>
+	</div>
+
+
+
+
+
+
+
+
+
+
+<!--	 Add Bootstrap JS -->
+	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</body>
+</html>
