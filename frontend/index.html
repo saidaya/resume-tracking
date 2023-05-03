@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume-JD SKill Extractor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!--  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-eCv3V7N3BqPfpV7EKuavwv5o6Dl8AW9S9aU5m6p+Cm6yNL8f4G+v4OGnUIw19z0Zb+AFZBTKr+v0KEmD0qcC7Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />-->
+
+    <link rel="stylesheet" href="index.css">
+    <script src="index.js"></script>
+</head>
+<body>
+<!-- Navigation Bar -->
+<nav>
+    <div class="nav-wrapper blue-grey">
+<!--        <a href="#" class="brand-logo">Resume-JD SKill Extractor</a>-->
+
+        <a href="#" data-target="mobile-nav" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+        <ul id="nav-mobile" class="right hide-on-med-and-down">
+            <li><a href="#skill-extraction">Skill Extraction</a></li>
+            <li><a href="#skill_extraction">Score</a></li>
+        </ul>
+      <p class="center font_size " style="margin-top: 0px;margin-bottom: 0px;">Resume - JD Skill Extractor</p>
+
+
+    </div>
+</nav>
+
+<!-- Mobile Navigation -->
+<ul class="sidenav" id="mobile-nav">
+    <li><a href="#">Skill Extraction</a></li>
+    <li><a href="#skill_extraction">Score</a></li>
+</ul>
+
+<!-- Skill Extraction -->
+<section id="skill-extraction" class="grey lighten-4">
+    <div class="container">
+        <h2>Skill Extraction</h2>
+        <!--    SKill Extraction -->
+        <div class="row">
+            <div class="col s12 m6 l6">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Job Posting</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="myForm" action="" method="post" onsubmit="submitForm(event)">
+                            <div class="form-group">
+                                <label for="company_name">Company Name</label>
+                                <!--                  <input type="text" id="company-name" name="company-name">-->
+                                <input class="form-control" id="company_name" name="input-text">
+                            </div>
+                            <div class="form-group">
+                                <label for="job_description">Job Description</label>
+                                <textarea class="form-control" id="job_description" name="input-text" rows="5"
+                                          cols="15"></textarea>
+                            </div>
+                            <button type="submit">Post Job</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col s12 m6 l6">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Resume</h2>
+                    </div>
+                    <div class="card-body">
+                        <form>
+                            <div>
+                                <label for="canditate-name">Name</label>
+                                <input type="text" id="canditate-name" name="canditate-name">
+                            </div>
+                        </form>
+                        <div>
+                            <label for="fileInputt">Resume</label>
+                            <input type="file" id="fileInputt">
+
+                            <p id="message"></p>
+                        </div>
+                        <button type="submit" id="submit-btn" onclick="uploadFile()">Submit Resume</button>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--    Extracted skills -->
+        <div class="row">
+            <div class="col s12 m6 l6">
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2 style="margin: 0;">Job Description Skills</h2>
+                        <div id="clearBtn" class="clearBtn">
+                            <div id="clear1" class="" onclick="clearSkills2()">
+                                <i class="material-icons">delete</i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="data" class="mt-3"></div>
+                </div>
+            </div>
+            <div class="col s12 m6 l6">
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2 style="margin: 0;">Resume Skills</h2>
+                        <div id="clear" class="clearBtn" onclick="clearSkills()">
+                            <i class="material-icons">delete</i>
+                        </div>
+                    </div>
+                    <div id="data1" class="mt-3"></div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</section>
+<!-- Score -->
+<section id="skill_extraction" class="grey lighten-3">
+    <div class="container">
+        <h2>Score</h2>
+        <div class="card-new mb-3">
+            <div class="card-header-new">
+                <h2>Calculate Matching Score</h2>
+                <p>Upload your Resume and Job description to see the matching score.</p>
+            </div>
+            <div class="card-body-new">
+                <form id="scoringForm" action="" method="post" onsubmit="submitFormScore()">
+                    <div class="row">
+                        <div class="col s12 m12 l6">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label for="jd">Job Description</label>
+                                        <textarea class="form-control" id="jd" name="input-text" rows="5" cols="15"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col s12 m12 l6">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <label for="resumeInput">Resume</label>
+                                    <input type="file" id="resumeInput">
+                                    <!-- <p id="message"></p> -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit">Calculate Score</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="page-footer blue-grey darken-1">
+    <div class="container">
+        <div class="row">
+            <div class="col l12 s12">
+                <h5 class="white-text">Team Lexical Legion</h5>
+            </div>
+
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var elems = document.querySelectorAll('.sidenav');
+        var instances = M.Sidenav.init(elems);
+    });
+</script>
+
+<script>
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

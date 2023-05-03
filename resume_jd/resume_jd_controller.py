@@ -8,6 +8,7 @@ from flask_cors import CORS, cross_origin
 from resume_jd.resume_jd_service import extract_skills_from_resume
 from resume_jd.resume_jd_service  import extract_skills_jd
 from resume_jd.resume_jd_service import scorer
+from resume_jd.resume_jd_service import matchingScore
 from resume_jd.resume_jd_model import ResponseData
 
 #Importing Lib for JSON,DOCX,PDF
@@ -114,3 +115,59 @@ def get_score_new():
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+
+
+@resume_jd_route.route('/skills/score/files', methods=['POST'])
+def get_score():
+    try:
+        job_description = request.form['jd']
+        resume_file = request.files['resume']
+
+
+        # Check if resume file exists in the request
+        if not resume_file:
+            response_data = {'message': 'No resume file in the request'}
+            return jsonify(response_data), 400
+
+        # Check if the file format is valid
+        file_name = resume_file.filename
+        if not file_name or '.' not in file_name or file_name.rsplit('.', 1)[1].lower() not in ['pdf', 'docx', 'txt']:
+            response_data = {'message': 'Invalid file format'}
+            return jsonify(response_data), 400
+
+        # Read the uploaded file based on its type
+        if file_name.endswith('.pdf'):
+            pdf_reader = PyPDF2.PdfReader(BytesIO(resume_file.read()))
+            resume_text = ''
+            for page in pdf_reader.pages:
+                resume_text += page.extract_text()
+        elif file_name.endswith('.docx'):
+            doc = docx.Document(BytesIO(resume_file.read()))
+            resume_text = ''
+            for paragraph in doc.paragraphs:
+                resume_text += paragraph.text
+        elif file_name.endswith('.txt'):
+            resume_text = resume_file.read().decode('utf-8')
+        else:
+            response_data = {'message': 'Invalid file format'}
+            return jsonify(response_data), 400
+
+
+
+
+        # Calculate cosine similarity score between job description skills and resume skills
+        skills_score = matchingScore(job_description,resume_text)['cosine_similarity']
+
+        # Prepare the response
+        response_data = {
+            'message': 'Success',
+            'skills_score': skills_score
+        }
+        return jsonify(response_data), 200
+
+    except Exception as e:
+        response_data = {'error': str(e)}
+        return jsonify(response_data), 500
+
