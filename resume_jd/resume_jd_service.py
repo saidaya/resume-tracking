@@ -306,3 +306,117 @@ def scorer():
         response = {'error': str(e)}
 
     return response
+
+
+
+#Method to extract skills
+
+def skillExtraction(text):
+    try:
+        skill_data = pd.read_csv(skills_filter_file)
+        skill_data["Skill"] = skill_data["Skill"].str.lower()
+        skill_set = set(skill_data["Skill"].tolist())
+
+        # Extract skills from resume
+        annotations = skill_extractor.annotate(text)
+        print("Annotations", annotations)
+        matched_phrases = [item['doc_node_value'] for item in annotations['results']['ngram_scored'] if
+                           item['score'] >= 1]
+        print("matched_phrases:", matched_phrases)
+        full_matches = [item['doc_node_value'] for item in annotations['results']['full_matches']]
+        print("full_matches:", full_matches)
+        matched_phrases += full_matches
+        print("matched_phrases:", matched_phrases)
+
+        # Count the occurrences of each matched phrase
+        phrase_counts = {}
+        for phrase in matched_phrases:
+            # Use defaultdict to simplify the counting process
+            phrase_counts[phrase] = phrase_counts.get(phrase, 0) + 1
+
+        # Sort the phrases by frequency and extract the most frequent ones as key phrases
+        sorted_phrases = sorted(phrase_counts.items(), key=lambda x: x[1], reverse=True)
+        print("sorted_phrases:", sorted_phrases)
+        key_phrases = [x[0] for x in sorted_phrases if x[1] > 1]
+        key_phrases += full_matches
+        key_phrases = list(set(key_phrases))
+        print("key_phrases:", key_phrases)
+
+        # Find all unmatched phrases and filter them against a list of known skills
+        unmatched_phrases = [x[0] for x in sorted_phrases if x[1] == 1]
+        # Convert all skills to lowercase for case-insensitive matching
+        skill_data = skill_data.apply(lambda x: x.str.lower())
+        skill_set = set(skill_data["Skill"].tolist())
+        unmatched_set = set(unmatched_phrases)
+        # Find the intersection of the unmatched phrases and known skills to identify key skills
+        key_phrases += list(skill_set.intersection(unmatched_set))
+        key_phrases = list(set(key_phrases))
+        # Save skills data as JSON
+        data = {
+            "skills": key_phrases,
+        }
+        return data
+
+    except FileNotFoundError:
+        # Handle file not found error
+        error_data = {
+            "status": 500,
+            "message": "Skills CSV file not found.",
+        }
+        return error_data
+    except Exception as e:
+        # Handle any other exceptions
+        error_message = "An error occurred while extracting skills: " + str(e)
+        error_data = {
+            "status": 500,
+            "message": error_message,
+        }
+        return error_data
+
+
+#Method to get score from JD and REsume : NEW FILES
+
+def matchingScore(job_text,resume_text):
+    if not resume_text:
+        # Return error response if resume_text is empty
+        error_data = {
+            "status": 501,
+            "message": "No resume provided. No skills to extract.",
+        }
+        return error_data
+    if not job_text:
+        return {
+            "status": 501,
+            "message": "No job description provided. No skills to extract."
+        }
+
+    try:
+
+        jd_skills_extracted = skillExtraction(job_text)
+        resume_skills_extracted = skillExtraction(resume_text)
+
+        jd_skills = jd_skills_extracted['skills']
+        resume_skills = resume_skills_extracted['skills']
+
+        # combine all skills into a single list and remove duplicates
+        all_skills = list(set(jd_skills + resume_skills))
+
+        # create a binary vector for each file, indicating which skills are present
+        jd_vector = np.array([1 if skill in jd_skills else 0 for skill in all_skills])
+        resume_vector = np.array([1 if skill in resume_skills else 0 for skill in all_skills])
+
+        # calculate the cosine similarity between the two vectors
+        cosine_sim = cosine_similarity(jd_vector.reshape(1, -1), resume_vector.reshape(1, -1))[0][0]
+
+        # convert cosine similarity to a percentage and return the result as JSON
+        cosine_similarity_percentage = round(cosine_sim * 100, 2)
+        response = {'cosine_similarity': cosine_similarity_percentage}
+
+    except FileNotFoundError as e:
+        response = {'error': str(e)}
+
+    return response
+
+
+
+
