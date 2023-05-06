@@ -1,7 +1,7 @@
 
 # TALENT ACQUISITION TAGGING USING NLP (WIP)
 
-## installation
+## Installation
 
 - Update your pip and python
 - Clone the project using `git clone https://github.com/saidaya/resume-tracking.git`
@@ -11,43 +11,29 @@
 - In main directory of the project, Run `python main.py`
 
 
-##sever setup
+## AWS Server setup .
 
-create EC2 Linux instance and store the .pem file
+- create EC2 Ubuntu instance and store the .pem file
+- Start the instance and connect the ubuntu through SSH
 
-
-
-## install python
-
-sudo apt-get update
-sudo apt-get install python3
-sudo apt-get install python3-pip
-sudo apt-get install python3-venv
-
-# go to root directory
-mkdir ResumeRankerAPI/
-cd ResumeRankerAPI/
-
-
-python3 -m venv env
-source env/bin/activate
+  - Update using `sudo apt-get update` 
+  - Install python using `sudo apt-get install python3`
+  - Install pip using `sudo apt-get install python3-pip`
+  - Install venv using `sudo apt-get install python3-venv`
+  - Insatall git using `sudo apt-get install git`
+  - Clone the project files in the root directory using `git clone https://github.com/saidaya/resume-tracking.git`
+  - `cd resume-tracking`
+  - create venv using `python3 -m venv env` 
+  - activate env by `source env/bin/activate`
+  - Install the libraries using `pip install -r requirements.txt` 
+  - Run `python -m spacy download en_core_web_lg`
 
 
-## transfer the code into root folder using filezilla
+## To run with Gunicorn server and add gunicorn server as service on AWS to make it active all the time as long as the instance is running.
 
-## install application software requirements
-pip install -r requirements.txt
-
-python -m spacy download en_core_web_lg
-
-## gunicorn set up
-pip install gunicorn
-
-## add gunicorn server as service that runs the flask app
-
-cd /etc/systemd/system/
-sudo nano gunicorn1.service
-
+- go to system folder using `cd /etc/systemd/system/`
+- open service file using `sudo nano gunicorn1.service`
+- Copy the below code between the lines and paste into the editor and save the file.
 ---------------------------------
 [Unit]
 Description=Gunicorn instance two for my Flask App
@@ -56,23 +42,22 @@ After=network.target
 [Service]
 User=ubuntu
 Group=www-data
-WorkingDirectory=/home/ubuntu/ResumeRankerAPI/
-Environment="PATH=/home/ubuntu/ResumeRankerAPI/env/bin"
-ExecStart=/home/ubuntu/ResumeRankerAPI/env/bin/gunicorn --workers 3 --bind 0.0.0.0:8080 main:app
+WorkingDirectory=/home/ubuntu/resume-tracking/
+Environment="PATH=/home/ubuntu/resume-tracking/env/bin"
+ExecStart=/home/ubuntu/resume-tracking/env/bin/gunicorn --workers 3 --bind 0.0.0.0:8080 --timeout  main:app
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
 ------------------------------
-ctrl+O
-enter
-ctrl+X
+- save the file using `ctrl+O` => `enter` => `ctrl+X`
 
 
-## start service
-sudo systemctl daemon-reload
-sudo systemctl start gunicorn1
-sudo systemctl enable gunicorn1
-sudo systemctl status gunicorn1
+## Start service
+- To load the daemon `sudo systemctl daemon-reload`
+- To start gunicorn as service `sudo systemctl start gunicorn1`
+- To check the status of gunicorn `sudo systemctl status gunicorn1`
+
+### Happy Coding !!!
 
 
